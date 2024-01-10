@@ -1,0 +1,130 @@
+# 
+# Welcome to GDB Online.
+# GDB online is an online compiler and debugger tool for C, C++, Python, Java, PHP, Ruby, Perl,
+# C#, OCaml, VB, Swift, Pascal, Fortran, Haskell, Objective-C, Assembly, HTML, CSS, JS, SQLite, Prolog.
+# Code, Compile, Run and Debug online from anywhere in world.
+# 
+# 
+#!/bin/bash
+
+# internsctl - Custom Linux Command for Operations
+
+# Define the version
+VERSION="v0.1.0"
+
+# Define the usage message
+usage() {
+  echo "Usage: internsctl [OPTIONS]"
+  echo "Custom Linux Command for Operations"
+  echo
+  echo "Options:"
+  echo "  cpu getinfo                  Get CPU information"
+  echo "  memory getinfo               Get Memory information"
+  echo "  user create <username>       Create a new user"
+  echo "  user list                    List all regular users"
+  echo "  user list --sudo-only        List users with sudo permissions"
+  echo "  file getinfo <file-name>     Get information about a file"
+  echo "    --size, -s                 Print file size"
+  echo "    --permissions, -p          Print file permissions"
+  echo "    --owner, -o                Print file owner"
+  echo "    --last-modified, -m        Print last modified time"
+  echo
+}
+
+# Define the main function
+main() {
+  case $1 in
+    cpu)
+      if [ "$2" == "getinfo" ]; then
+        lscpu
+      else
+        echo "Error: Unknown option for CPU. Use internsctl --help for usage guidelines."
+        exit 1
+      fi
+      ;;
+    memory)
+      if [ "$2" == "getinfo" ]; then
+        free
+      else
+        echo "Error: Unknown option for Memory. Use internsctl --help for usage guidelines."
+        exit 1
+      fi
+      ;;
+    user)
+      case $2 in
+        create)
+          if [ -n "$3" ]; then
+            sudo useradd -m "$3"
+            echo "User $3 created successfully."
+          else
+            echo "Error: Username not provided. Usage: internsctl user create <username>"
+            exit 1
+          fi
+          ;;
+        list)
+          if [ "$3" == "--sudo-only" ]; then
+            getent group sudo | cut -d: -f4 | tr ',' '\n'
+          else
+            getent passwd | cut -d: -f1
+          fi
+          ;;
+        *)
+          echo "Error: Unknown option for User. Use internsctl --help for usage guidelines."
+          exit 1
+          ;;
+      esac
+      ;;
+    file)
+      if [ "$2" == "getinfo" ]; then
+        if [ -n "$3" ]; then
+          file="$3"
+          size=$(stat -c %s "$file")
+          permissions=$(stat -c %A "$file")
+          owner=$(stat -c %U "$file")
+          last_modified=$(stat -c %y "$file")
+          
+          case $4 in
+            --size | -s)
+              echo "$size"
+              ;;
+            --permissions | -p)
+              echo "$permissions"
+              ;;
+            --owner | -o)
+              echo "$owner"
+              ;;
+            --last-modified | -m)
+              echo "$last_modified"
+              ;;
+            *)
+              echo "File: $file"
+              echo "Access: $permissions"
+              echo "Size(B): $size"
+              echo "Owner: $owner"
+              echo "Modify: $last_modified"
+              ;;
+          esac
+        else
+          echo "Error: File name not provided. Usage: internsctl file getinfo <file-name>"
+          exit 1
+        fi
+      else
+        echo "Error: Unknown option for File. Use internsctl --help for usage guidelines."
+        exit 1
+      fi
+      ;;
+    --help)
+      usage
+      ;;
+    --version)
+      echo "internsctl $VERSION"
+      ;;
+    *)
+      echo "Error: Unknown option. Use internsctl --help for usage guidelines."
+      exit 1
+      ;;
+  esac
+}
+
+# Execute the main function with command line arguments
+main "$@"
